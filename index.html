@@ -509,11 +509,7 @@ function showUpgradePanel(){
     card.onclick=()=>{
       u.apply();
       panel.style.display='none';
-      document.exitPointerLock();
-      // proceed to next wave after upgrade
-      setTimeout(()=>{
-        document.body.requestPointerLock();
-      },300);
+      document.body.requestPointerLock();
     };
     choices.appendChild(card);
   });
@@ -1068,7 +1064,8 @@ document.addEventListener('pointerlockchange',()=>{
 document.addEventListener('pointerlockchange',()=>{
   locked=!!document.pointerLockElement;
   document.getElementById('hud').style.display=locked?'block':'none';
-  if(!locked&&gameActive)document.getElementById('menu').style.display='flex';
+  const upgradePanel=document.getElementById('upgrade-panel');
+  if(!locked&&gameActive&&upgradePanel.style.display!=='flex')document.getElementById('menu').style.display='flex';
 });
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);
