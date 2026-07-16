@@ -11,8 +11,12 @@ canvas{display:block}
 
 #menu{position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(14px)}
 #menu-box{text-align:center;color:#fff;max-width:560px;padding:48px}
-#menu-box h1{font-size:3.2rem;font-weight:900;letter-spacing:.2em;margin-bottom:2px;background:linear-gradient(135deg,#ff4444,#ff8800,#ff4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200%;animation:grad 3s ease infinite}
-@keyframes grad{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+#menu-box h1{font-size:3.2rem;font-weight:900;letter-spacing:.2em;margin-bottom:2px;color:#fff;position:relative;text-shadow:0 0 20px rgba(255,68,68,.3)}
+#menu-box h1::before,#menu-box h1::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+#menu-box h1::before{left:2px;text-shadow:-2px 0 #ff4444;clip-path:inset(0 0 65% 0);animation:glitch-t 2.5s infinite linear alternate-reverse}
+#menu-box h1::after{left:-2px;text-shadow:2px 0 #00aaff;clip-path:inset(65% 0 0 0);animation:glitch-b 1.8s infinite linear alternate-reverse}
+@keyframes glitch-t{0%{clip-path:inset(40% 0 20% 0);transform:translate(-2px)}10%{clip-path:inset(10% 0 75% 0);transform:translate(2px)}20%{clip-path:inset(80% 0 5% 0);transform:translate(-1px)}30%{clip-path:inset(25% 0 55% 0);transform:translate(1px)}40%{clip-path:inset(55% 0 30% 0);transform:translate(-2px)}50%{clip-path:inset(5% 0 85% 0);transform:translate(0)}100%{clip-path:inset(40% 0 20% 0);transform:translate(0)}}
+@keyframes glitch-b{0%{clip-path:inset(85% 0 5% 0);transform:translate(2px)}15%{clip-path:inset(55% 0 35% 0);transform:translate(-1px)}30%{clip-path:inset(15% 0 65% 0);transform:translate(2px)}45%{clip-path:inset(70% 0 15% 0);transform:translate(0)}60%{clip-path:inset(35% 0 50% 0);transform:translate(-2px)}100%{clip-path:inset(60% 0 25% 0);transform:translate(0)}}
 #menu-box .sub{color:#555;font-size:.8rem;letter-spacing:.4em;margin-bottom:28px}
 #menu-box .ver{color:#333;font-size:.65rem;margin-bottom:24px}
 #menu-box .btn{display:block;width:100%;padding:14px;margin:8px 0;border:2px solid rgba(255,68,68,.3);background:rgba(255,68,68,.06);color:#ff6644;font-size:1rem;font-weight:700;letter-spacing:.15em;border-radius:4px;cursor:pointer;transition:all .2s}
@@ -142,13 +146,36 @@ canvas{display:block}
 #wi-stats b{color:#ff8800}
 #wi-next{color:#444;font-size:.7rem;margin-top:12px}
 @keyframes wiPulse{0%{transform:scale(2);opacity:0}50%{transform:scale(.95);opacity:1}100%{transform:scale(1);opacity:1}}
+
+/* === ORIGINKIT-STYLE EFFECTS === */
+
+/* Electric Border (weapon slots, upgrade cards) */
+@property --eb-angle{syntax:'<angle>';initial-value:0deg;inherits:false}
+.electric-border{position:relative;background:rgba(0,0,0,.35);border:none!important}
+.electric-border::before{content:'';position:absolute;inset:-2px;background:conic-gradient(from var(--eb-angle),transparent 60%,#ff4444 78%,#ff8800 85%,#ff4444 92%,transparent 100%);animation:eb-spin 3s linear infinite;z-index:-1;border-radius:inherit;pointer-events:none}
+.electric-border::after{content:'';position:absolute;inset:2px;background:rgba(0,0,0,.85);border-radius:inherit;z-index:-1;pointer-events:none}
+.electric-border>*{position:relative;z-index:1}
+@keyframes eb-spin{to{--eb-angle:360deg}}
+
+/* Flicker Text */
+.flicker{animation:flicker-anim 3s infinite}
+@keyframes flicker-anim{0%,19.999%,22%,62.999%,64%,64.999%,70%,100%{opacity:1;text-shadow:0 0 8px rgba(255,102,68,.4)}20%,21.999%,63%,63.999%,65%,69.999%{opacity:.33;text-shadow:none}}
+
+/* Scanline overlay for menu */
+#menu-scanlines{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);z-index:1}
+
+/* Particle canvas for menu */
+#menu-particles{position:absolute;inset:0;z-index:0;pointer-events:none}
+
+/* Scramble text transition class */
+.scrambling{font-family:monospace;letter-spacing:.15em}
 </style>
 </head>
 
 <body>
 
-<div id="menu"><div id="menu-box">
-  <h1>COMBAT ZONE</h1>
+<div id="menu"><canvas id="menu-particles"></canvas><div id="menu-scanlines"></div><div id="menu-box">
+  <h1 data-text="COMBAT ZONE">COMBAT ZONE</h1>
   <div class="sub">TACTICAL FPS</div>
   <div class="ver">v3.0 — BOSSES · UPGRADES · TURRETS · BULLET TIME · DYNAMIC MAP</div>
   <button class="btn" onclick="startGame()">►&ensp;DEPLOY</button>
@@ -179,16 +206,16 @@ canvas{display:block}
     <div class="ch-line ch-r" style="right:-16px"></div>
   </div>
   <div id="top-left">
-    <div id="wave-text">WAVE 1</div>
+    <div id="wave-text" class="flicker">WAVE 1</div>
     <div id="score-text">0</div>
     <div id="kill-text">0 KILLS · 0 HS</div>
     <div id="combo-display">x1 COMBO</div>
   </div>
   <div id="weapon-slots">
-    <div class="ws active" id="ws0"><div class="wn">1</div>PTL</div>
-    <div class="ws" id="ws1"><div class="wn">2</div>AR</div>
-    <div class="ws" id="ws2"><div class="wn">3</div>SHG</div>
-    <div class="ws" id="ws3"><div class="wn">4</div>SNP</div>
+    <div class="ws electric-border active" id="ws0"><div class="wn">1</div>PTL</div>
+    <div class="ws electric-border" id="ws1"><div class="wn">2</div>AR</div>
+    <div class="ws electric-border" id="ws2"><div class="wn">3</div>SHG</div>
+    <div class="ws electric-border" id="ws3"><div class="wn">4</div>SNP</div>
   </div>
   <div id="weapon-info">
     <div id="weapon-name">PISTOL</div>
@@ -467,6 +494,8 @@ function showUpgradePanel(){
   const panel=document.getElementById('upgrade-panel');
   const choices=document.getElementById('upgrade-choices');
   choices.innerHTML='';
+  // exit pointer lock so upgrade cards can receive clicks
+  if(document.pointerLockElement)document.exitPointerLock();
   panel.style.display='flex';
 
   // pick 3 random upgrades
@@ -475,7 +504,7 @@ function showUpgradePanel(){
 
   shuffled.forEach(u=>{
     const card=document.createElement('div');
-    card.className='ucard';
+    card.className='ucard electric-border';
     card.innerHTML=`<div class="uicon">${u.icon}</div><div class="uname">${u.name}</div><div class="udesc">${u.desc}</div><div class="ulevel">LV ${upgradeState[u.id]+1}/${u.max}</div>`;
     card.onclick=()=>{
       u.apply();
@@ -820,79 +849,119 @@ function createWeapon(idx){
   switch(idx){
     case 0:{ // pistol
       const slide=box(.05,.052,.22,metal);slide.position.set(0,.025,-.02);
+      for(let i=0;i<5;i++){const s=box(.053,.007,.009,metal);s.position.set(0,.05,.035+i*.02);g.add(s);} // rear serrations
       const barrel=cyl(.015,.015,.14);barrel.rotation.x=Math.PI/2;barrel.position.set(0,.025,-.13);
+      const muzzleLip=cyl(.017,.015,.012,8,metal);muzzleLip.rotation.x=Math.PI/2;muzzleLip.position.set(0,.025,-.2);
       const frame=box(.044,.05,.13,poly);frame.position.set(0,-.025,.05);
       const trigGuard=torus(.02,.006,16,metal);trigGuard.position.set(0,-.045,.01);trigGuard.rotation.x=Math.PI/2;
       const trig=box(.008,.02,.012,metal);trig.position.set(0,-.05,.01);
+      const trigPin=sph(.006,metal);trigPin.position.set(0,-.042,.022);
       const grip=box(.04,.13,.068,poly);grip.position.set(0,-.1,.07);grip.rotation.x=.22;
+      const baseplate=box(.043,.025,.073,poly);baseplate.position.set(0,-.165,.072);baseplate.rotation.x=.22;
+      const takedown=box(.01,.013,.013,metal);takedown.position.set(-.027,-.01,.055);
       const accRail=box(.018,.012,.04,metal);accRail.position.set(0,-.018,-.03);
-      const sightF=box(.006,.016,.01,accent);sightF.position.set(0,.055,-.1);
-      const sightR=box(.006,.02,.012,accent);sightR.position.set(0,.058,.07);
-      g.add(slide,barrel,frame,trigGuard,trig,grip,accRail,sightF,sightR);
+      for(let i=0;i<3;i++){const s=box(.02,.006,.008,metal);s.position.set(0,-.012,-.04+i*.02);g.add(s);} // rail slots
+      const sightF=box(.006,.014,.01,accent);sightF.position.set(0,.055,-.1);
+      const sightR1=box(.006,.018,.008,accent);sightR1.position.set(-.006,.058,.07);
+      const sightR2=box(.006,.018,.008,accent);sightR2.position.set(.006,.058,.07);
+      const port=box(.006,.022,.05,darkMetal);port.position.set(.026,.026,.0); // ejection port
+      g.add(slide,muzzleLip,frame,trigGuard,trig,trigPin,grip,baseplate,takedown,accRail,sightF,sightR1,sightR2,port);
       g.position.set(.21,-.16,-.34);
       mz=-.2;my=.025;
       break;
     }
     case 1:{ // M4
       const upper=box(.05,.05,.6,metal);upper.position.set(0,.02,-.1);
+      for(let i=0;i<12;i++){const s=box(.03,.006,.01,metal);s.position.set(0,.058,-.34+i*.056);g.add(s);} // top rail slots
       const lower=box(.05,.055,.24,poly);lower.position.set(0,-.02,.16);
       const hg=box(.058,.058,.28,poly);hg.position.set(0,.015,-.4);
+      for(let i=0;i<6;i++){const s=box(.052,.006,.01,metal);s.position.set(0,.046,-.52+i*.05);g.add(s);} // handguard rail slots
       const barrel=cyl(.012,.012,.28);barrel.rotation.x=Math.PI/2;barrel.position.set(0,.02,-.6);
+      const gasBlock=box(.024,.024,.03,darkMetal);gasBlock.position.set(0,.004,-.46);
       const fh=cyl(.02,.016,.05,8,metal);fh.rotation.x=Math.PI/2;fh.position.set(0,.02,-.72);
+      const crush=cyl(.021,.021,.008,8,darkMetal);crush.rotation.x=Math.PI/2;crush.position.set(0,.02,-.69);
       const fsPost=box(.008,.035,.008,accent);fsPost.position.set(0,.05,-.58);
+      const fsBase=box(.024,.014,.022,darkMetal);fsBase.position.set(0,.03,-.58);
       const rsAim=box(.008,.03,.008,accent);rsAim.position.set(0,.045,.04);
+      const port=box(.02,.022,.06,darkMetal);port.position.set(.026,.026,-.02); // ejection port
+      const ch=box(.018,.012,.012,metal);ch.position.set(.026,.05,-.4); // charging handle latch
       const grip=box(.036,.12,.05,poly);grip.position.set(0,-.11,.15);grip.rotation.x=.25;
       const tguard=torus(.02,.006,16,metal);tguard.position.set(0,-.06,.12);tguard.rotation.x=Math.PI/2;tguard.scale.set(1,.85,1);
       const trig=box(.008,.02,.014,metal);trig.position.set(0,-.06,.12);
+      const trigPin=sph(.006,metal);trigPin.position.set(0,-.055,.135);
       const mag=box(.034,.17,.046,darkMetal);mag.position.set(0,-.12,-.02);mag.rotation.x=.13;
+      const magBase=box(.037,.022,.05,darkMetal);magBase.position.set(0,-.205,-.045);magBase.rotation.x=.13;
       const tube=cyl(.017,.017,.13,8,poly);tube.rotation.x=Math.PI/2;tube.position.set(0,-.01,.34);
+      const castle=torus(.021,.009,12,poly);castle.position.set(0,-.01,.405);castle.rotation.y=Math.PI/2;
       const stock=box(.04,.07,.12,poly);stock.position.set(0,-.02,.42);
+      const sling=torus(.013,.004,10,metal);sling.position.set(-.022,-.05,.4);sling.rotation.x=Math.PI/2;
       const railTop=box(.02,.012,.48,metal);railTop.position.set(0,.05,-.1);
       const reddot=cyl(.02,.02,.028,12,poly);reddot.rotation.x=Math.PI/2;reddot.position.set(0,.065,-.18);
+      const rdRing=torus(.022,.004,12,poly);rdRing.position.set(0,.065,-.18);rdRing.rotation.y=Math.PI/2;
       const rdlens=circ(.014,lensRed);rdlens.position.set(0,.065,-.195);rdlens.rotation.y=Math.PI/2;
-      g.add(upper,lower,hg,barrel,fh,fsPost,rsAim,grip,tguard,trig,mag,tube,stock,railTop,reddot,rdlens);
+      g.add(upper,lower,hg,barrel,gasBlock,fh,crush,fsPost,fsBase,rsAim,port,ch,grip,tguard,trig,trigPin,mag,magBase,tube,castle,stock,sling,railTop,reddot,rdRing,rdlens);
       g.position.set(.23,-.17,-.4);
       mz=-.74;my=.02;
       break;
     }
     case 2:{ // shotgun
       const recv=box(.06,.07,.26,metal);recv.position.set(0,.01,-.03);
+      for(let i=0;i<6;i++){const s=box(.063,.008,.01,metal);s.position.set(0,.046,-.13+i*.032);g.add(s);} // receiver top serrations
       const b1=cyl(.016,.016,.48,10,metal);b1.rotation.x=Math.PI/2;b1.position.set(-.02,.025,-.42);
       const b2=cyl(.016,.016,.48,10,metal);b2.rotation.x=Math.PI/2;b2.position.set(.02,.025,-.42);
       const vent=box(.05,.012,.42,poly);vent.position.set(0,.052,-.42);
       const bead=sph(.01,accent);bead.position.set(0,.062,-.64);
+      const midbead=sph(.006,accent);midbead.position.set(0,.05,-.3);
       const magTube=cyl(.014,.014,.4,8,metal);magTube.rotation.x=Math.PI/2;magTube.position.set(0,-.025,-.4);
+      const tubeCap=cyl(.016,.016,.02,8,metal);tubeCap.rotation.x=Math.PI/2;tubeCap.position.set(0,-.025,-.61);
       const pump=box(.05,.045,.16,wood);pump.position.set(0,-.03,-.34);
+      for(let i=0;i<4;i++){const r=box(.052,.006,.02,wood);r.position.set(0,-.046,-.4+i*.04);g.add(r);} // pump grip ridges
       const pa1=cyl(.008,.008,.12,6,metal);pa1.rotation.z=Math.PI/2;pa1.position.set(-.025,-.008,-.3);
       const pa2=cyl(.008,.008,.12,6,metal);pa2.rotation.z=Math.PI/2;pa2.position.set(.025,-.008,-.3);
       const tguard=torus(.018,.006,16,metal);tguard.position.set(0,-.045,.06);tguard.rotation.x=Math.PI/2;
       const trig=box(.008,.018,.012,metal);trig.position.set(0,-.05,.06);
+      const safety=box(.013,.013,.013,new THREE.MeshStandardMaterial({color:0xcc2222,roughness:.5}));safety.position.set(-.032,-.02,.06);
       const stock=box(.05,.07,.24,wood);stock.position.set(0,-.01,.17);
+      const stockCap=box(.05,.072,.02,wood);stockCap.position.set(0,-.01,.29);
       const grip=box(.04,.1,.05,wood);grip.position.set(0,-.09,.07);grip.rotation.x=.2;
-      g.add(recv,b1,b2,vent,bead,magTube,pump,pa1,pa2,tguard,trig,stock,grip);
+      const sw1=torus(.011,.004,8,metal);sw1.position.set(-.03,-.03,.05);sw1.rotation.x=Math.PI/2;
+      g.add(recv,b1,b2,vent,bead,midbead,magTube,tubeCap,pump,pa1,pa2,tguard,trig,safety,stock,stockCap,grip,sw1);
       g.position.set(.24,-.17,-.42);
       mz=-.64;my=.025;
       break;
     }
     case 3:{ // sniper
       const action=box(.05,.06,.4,metal);action.position.set(0,.01,-.1);
+      const recvRing=torus(.028,.01,14,metal);recvRing.position.set(0,.01,-.28);recvRing.rotation.y=Math.PI/2;
       const barrel=cyl(.014,.014,.72,10,metal);barrel.rotation.x=Math.PI/2;barrel.position.set(0,.015,-.78);
       const brake=cyl(.024,.02,.1,8,metal);brake.rotation.x=Math.PI/2;brake.position.set(0,.015,-1.14);
+      for(let i=0;i<2;i++){const p=box(.05,.012,.012,darkMetal);p.position.set(0,i?.031:-.001,-1.08);g.add(p);} // brake ports
       const stock=box(.05,.07,.4,wood);stock.position.set(0,-.01,.36);
       const cheek=box(.035,.05,.2,wood);cheek.position.set(0,.06,.28);
       const grip=box(.035,.12,.05,wood);grip.position.set(0,-.11,.18);grip.rotation.x=.25;
+      const tguard=torus(.016,.005,14,metal);tguard.position.set(0,-.05,.12);tguard.rotation.x=Math.PI/2;
+      const trig=box(.008,.018,.012,metal);trig.position.set(0,-.055,.12);
       const mag=box(.03,.09,.05,darkMetal);mag.position.set(0,-.1,-.04);
+      const magBase=box(.032,.02,.052,darkMetal);magBase.position.set(0,-.145,-.05);
       const bolt=cyl(.008,.008,.06,6,metal);bolt.rotation.z=Math.PI/2;bolt.position.set(.045,.04,-.18);
       const boltKnob=sph(.015,metal);boltKnob.position.set(.08,.04,-.18);
+      const boltShroud=box(.03,.05,.045,metal);boltShroud.position.set(.03,.04,-.2);
       const sTube=cyl(.024,.024,.3,14,metal);sTube.rotation.x=Math.PI/2;sTube.position.set(0,.09,-.26);
       const sun=cyl(.026,.026,.08,14,poly);sun.rotation.x=Math.PI/2;sun.position.set(0,.09,-.42);
       const lensF=circ(.022,lensMat);lensF.position.set(0,.09,-.47);lensF.rotation.y=-Math.PI/2;
       const lensR=circ(.022,lensMat);lensR.position.set(0,.09,-.1);lensR.rotation.y=Math.PI/2;
+      const eyepiece=torus(.026,.006,14,poly);eyepiece.position.set(0,.09,-.11);eyepiece.rotation.y=Math.PI/2;
+      const objRing=torus(.026,.006,14,poly);objRing.position.set(0,.09,-.41);objRing.rotation.y=Math.PI/2;
+      const tElev=cyl(.012,.012,.02,10,metal);tElev.rotation.x=Math.PI/2;tElev.position.set(0,.115,-.26);
+      const tWind=cyl(.012,.012,.02,10,metal);tWind.rotation.z=Math.PI/2;tWind.position.set(-.025,.09,-.26);
       const ring1=box(.014,.035,.014,metal);ring1.position.set(0,.065,-.34);
       const ring2=box(.014,.035,.014,metal);ring2.position.set(0,.065,-.18);
       const bipodL=cyl(.006,.006,.2,6,metal);bipodL.position.set(-.03,-.09,-.72);bipodL.rotation.x=.2;
       const bipodR=cyl(.006,.006,.2,6,metal);bipodR.position.set(.03,-.09,-.72);bipodR.rotation.x=.2;
-      g.add(action,barrel,brake,stock,cheek,grip,mag,bolt,boltKnob,sTube,sun,lensF,lensR,ring1,ring2,bipodL,bipodR);
+      const footL=box(.022,.008,.012,metal);footL.position.set(-.045,-.18,-.72);footL.rotation.z=.32;
+      const footR=box(.022,.008,.012,metal);footR.position.set(.045,-.18,-.72);footR.rotation.z=-.32;
+      const sw=torus(.012,.004,10,metal);sw.position.set(-.025,-.04,.4);sw.rotation.x=Math.PI/2;
+      g.add(action,recvRing,barrel,brake,stock,cheek,grip,tguard,trig,mag,magBase,bolt,boltKnob,boltShroud,sTube,sun,lensF,lensR,eyepiece,objRing,tElev,tWind,ring1,ring2,bipodL,bipodR,footL,footR,sw);
       g.position.set(.27,-.18,-.5);
       mz=-1.18;my=.015;
       break;
@@ -1253,7 +1322,7 @@ function spawnWave(n){
     document.getElementById('boss-bar-wrap').style.display='block';
   }
 
-  document.getElementById('wave-text').textContent=`WAVE ${n}`;
+  scrambleText(document.getElementById('wave-text'),`WAVE ${n}`,400);
 }
 
 let currentBoss=null;
@@ -1473,6 +1542,7 @@ function showWaveIntermission(){
     `Kills: <b>${waveKills}</b> · Accuracy: <b>${acc}%</b> · Score Earned: <b>${score}</b>`;
   document.getElementById('wi-next').textContent='Next wave in 5s...';
   document.getElementById('wave-intermission').style.display='flex';
+  scrambleText(document.getElementById('wi-title'),'WAVE CLEAR',350);
 }
 
 function updateIntermission(dt){
@@ -1853,6 +1923,7 @@ function damagePlayer(dmg){
 function gameOver(){
   gameActive=false;document.exitPointerLock();
   document.getElementById('gameover').style.display='flex';
+  scrambleText(document.querySelector('#gameover h2'),'MISSION FAILED',500);
   document.getElementById('go-stats').textContent=
     `Score: ${score} · Wave: ${wave} · Kills: ${kills} · HS: ${headshots} · Best Combo: x${bestComboMult}`;
 }
@@ -2006,6 +2077,79 @@ const pCol=new Capsule(new THREE.Vector3(0,PR,5),new THREE.Vector3(0,PH,5),PR);
 buildMap();
 updateHUD();gameActive=true;spawnWave(1);animate();
 
+</script>
+
+<!-- ORIGINKIT-STYLE EFFECTS: Particles + Scramble Text -->
+<script>
+// === Menu Particle Background (Originkit-style) ===
+(function(){
+  const c=document.getElementById('menu-particles');
+  if(!c)return;
+  const ctx=c.getContext('2d');
+  let W,H,particles=[];
+  function resize(){W=c.width=window.innerWidth;H=c.height=window.innerHeight}
+  resize();window.addEventListener('resize',resize);
+  for(let i=0;i<60;i++){
+    particles.push({x:Math.random()*W,y:Math.random()*H,
+      vx:(Math.random()-.5)*.3,vy:(Math.random()-.5)*.3,
+      r:Math.random()*1.5+.5,a:Math.random()*.4+.1,
+      pulse:Math.random()*Math.PI*2});
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const t=Date.now()*.001;
+    for(const p of particles){
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;
+      if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      const alpha=p.a*(.6+.4*Math.sin(t*1.5+p.pulse));
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,68,68,'+alpha+')';ctx.fill();
+    }
+    // connection lines
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<120){
+          ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);
+          ctx.lineTo(particles[j].x,particles[j].y);
+          ctx.strokeStyle='rgba(255,68,68,'+(1-dist/120)*.12+')';
+          ctx.lineWidth=.5;ctx.stroke();
+        }
+      }
+    }
+    if(document.getElementById('menu').style.display!=='none')requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// === Scramble Text Effect (Originkit-style) ===
+function scrambleText(el,targetText,duration){
+  if(!el)return;
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%';
+  const steps=Math.floor(duration/30);
+  let step=0;
+  const origLen=targetText.length;
+  el.classList.add('scrambling');
+  const iv=setInterval(()=>{
+    let out='';
+    for(let i=0;i<origLen;i++){
+      if(step>steps*(i/origLen)){
+        out+=targetText[i]||'';
+      }else{
+        out+=chars[Math.floor(Math.random()*chars.length)];
+      }
+    }
+    el.textContent=out;
+    step++;
+    if(step>steps){el.textContent=targetText;el.classList.remove('scrambling');clearInterval(iv);}
+  },30);
+}
+
+// Apply scramble on wave change
+const _origWaveText=document.getElementById('wave-text');
+const _origScoreText=document.getElementById('score-text');
 </script>
 </body>
 </html>
